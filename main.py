@@ -1,4 +1,4 @@
-import pygame
+import pygame     
 from player import create_player, move_player
 from enemy import create_enemy, move_enemies
 from bullets import create_bullet, move_bullets
@@ -10,14 +10,14 @@ HEIGHT = 500
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-pygame.display.set_caption("Потом будет название")
+pygame.display.set_caption("DOTA 2 PRE-ALPHA")
 
 player_img = pygame.image.load("firstgame/sprites/player.png")
 enemy_img = pygame.image.load("firstgame/sprites/enemy.png")
 bullet_img = pygame.image.load("firstgame/sprites/bullet.png")
 background_img = pygame.image.load("firstgame/sprites/space.jpg")
 
-
+shot_sound = pygame.mixer.Sound("firstgame/shoot.mp3")
 
 player_img = pygame.transform.scale(player_img,(50, 50))
 enemy_img = pygame.transform.scale(enemy_img,(40, 40))
@@ -41,13 +41,22 @@ def draw_game_over(screen, width, height, score):
     font_large = pygame.font.SysFont(None, 60)
     font_small = pygame.font.SysFont(None, 30)
 
-    text_game_over = font_large.render("GAME OVER", True(255, 0, 0))
-    text_score = font_small.render(score, True, (255, 255, 255))
+    text_game_over = font_large.render("GAME OVER", True,(255, 0, 0))
+    text_score = font_small.render(str(score), True, (255, 255, 255))
     text_restart = font_small.render("Press r to restart", True, (255, 255, 255))
 
-    screen.blit(text_game_over, (width // 2 - text_game_over.get_width(), height // 2-80))
+    screen.blit(text_game_over, (width // 2 - text_game_over.get_width() //2, height // 2-80))
     screen.blit(text_score, (width // 2 - text_score.get_width(), height // 2-10))
-    screen.blit(text_restart, (width // 2 - text_restart.get_width(), height // 2+40))
+    screen.blit(text_restart, (width // 2 - text_restart.get_width() //2, height // 2+40))
+
+
+def restart_game():
+    player = create_player()
+    enemies = create_enemy(5, WIDTH)
+    bullets = []
+    score =0
+    return player, enemies, bullets, score
+
 
 Clock = pygame.time.Clock()
 
@@ -59,6 +68,19 @@ while running:
         if events.type == pygame.QUIT:
             pygame.quit()
             exit()
+        
+        if events.type == pygame.KEYDOWN and events.key == pygame.K_r and game_over == True:
+            player, enemies, bullets, score = restart_game()
+            game_over = False
+            
+
+
+    if game_over:
+        screen.fill("black")
+        draw_game_over(screen, WIDTH, HEIGHT, score)
+        pygame.display.update()
+        continue
+
 
     keys = pygame.key.get_pressed()
 
@@ -69,6 +91,7 @@ while running:
         if bullet_cooldown == 0:
             bullets.append(create_bullet(player.centerx , player.top))
             bullet_cooldown = cooldown
+            shot_sound.play()
 
     for bullet in bullets:
         for enemy in enemies:
@@ -91,7 +114,7 @@ while running:
         
 
         if player.colliderect(enemy):
-            running = False
+            game_over = True
 
     for bullet in bullets:
         screen.blit(bullet_img, (bullet.x, bullet.y))
